@@ -46,10 +46,6 @@ class Meter:
 
         self.visible = False
 
-        if not self.clear:
-            print('')
-            return
-
         self.back()
 
         if self.label:
@@ -108,8 +104,15 @@ class Meter:
     def finish(self):
         '''end the progress meter'''
 
-        self.hide()
+        if self.clear:
+            self.hide()
+        else:
+            # display final value
+            self._render()
+            print('')
+
         self.reset()
+        self.visible = False
 
     def reset(self):
         '''reset the progress meter to start'''
