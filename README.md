@@ -76,10 +76,8 @@ for placing text left and right of the progress meter.
 You might also display the value in a slightly different way by passing
 a custom `formatter` function. If that doesn't suffice, you can subclass
 the type and override the `render()` method to fully customize the
-progress meter.
-
-It is possible to implement a completely new type of meter by
-subclassing `progress.Meter`.
+progress meter. It's also possible to implement a completely new type of
+meter by subclassing `progress.Meter`.
 
 Up till now we've been single-threaded and we had to explicitly call
 `update()`. We can also let the progress be monitored from a thread.
