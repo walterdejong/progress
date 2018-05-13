@@ -73,9 +73,13 @@ Guess what this thing does.
 
 Each of these types may also take a parameter `label` and/or `rlabel`,
 for placing text left and right of the progress meter.
+You might also display the value in a slightly different way by passing
+a custom `formatter` function. If that doesn't suffice, you can subclass
+the type and override the `render()` method to fully customize the
+progress meter.
 
-These classes are all derived from the base `progress.Meter`.
-You might add a new type of meter by deriving from `progress.Meter`.
+Finally, it is possible to implement a completely new type of meter by
+deriving from the base class `progress.Meter`.
 
 
 --
