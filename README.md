@@ -140,5 +140,5 @@ labels and number formatters, or you might subclass to customize the
 threaded progress meter.
 
 ------
-This is free and unencumbered software released into the public domain.
+_This is free and unencumbered software released into the public domain._
 
