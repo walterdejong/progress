@@ -9,6 +9,7 @@
 '''progress meters'''
 
 import time
+import threading
 
 from typing import Callable
 
@@ -192,7 +193,7 @@ class Spinner(Meter):
 
         return self.face[self.value]
 
-    def update(self) -> None:   # type: ignore
+    def update(self, value: int=0) -> None:
         '''overridden update() func without arguments'''
 
         super().update(self.value)
@@ -244,22 +245,97 @@ class Percent(Meter):
 
 
 
-def _test_percent():
+class ThreadMeter(threading.Thread):
+    '''secondary base class to make a threaded Meter'''
+
+    # Note: this is a component class, that should be combined
+    # with a progress.Meter
+
+    def __init__(self):
+        '''initialize instance'''
+
+        super().__init__()
+
+        self.running = False
+
+    def run(self) -> None:
+        '''run the thread'''
+
+        self.running = True
+
+        self.show()
+
+        rate = 1 / self.rate
+        while self.running:
+            time.sleep(rate)
+            self.update(self.value)
+
+        self.finish()
+
+    def stop(self) -> None:
+        '''stop running'''
+
+        self.running = False
+        self.join()
+
+
+
+class ThreadSpinner(ThreadMeter, Spinner):
+    '''a threaded spinner'''
+
+    def __init__(self, label: str='', rlabel: str='', rate: float=_FPS_RATE) -> None:
+        '''initialize instance'''
+
+        Spinner.__init__(self, label=label, rlabel=rlabel, rate=rate)
+        ThreadMeter.__init__(self)
+
+
+
+class ThreadBar(ThreadMeter, Bar):
+    '''a threaded progress bar'''
+
+    def __init__(self, max_value: int, label: str='', rlabel: str='', start_value: int=0,
+                 width: int=20, face: str='| =|', formatter: Callable[[float], str]=None,
+                 rate: float=_FPS_RATE) -> None:
+        '''initialize instance'''
+
+        Bar.__init__(self, max_value=max_value, label=label, rlabel=rlabel, start_value=start_value,
+                     width=width, face=face, formatter=formatter, rate=rate)
+        ThreadMeter.__init__(self)
+
+
+
+class ThreadPercent(ThreadMeter, Percent):
+    '''a threaded percentage meter'''
+
+    def __init__(self, max_value: int, label: str='', rlabel: str='',
+                 start_value: int=0, formatter: Callable[[float], str]=None,
+                 rate: float=_FPS_RATE) -> None:
+        '''initialize instance'''
+
+        Percent.__init__(self, max_value=max_value, label=label, rlabel=rlabel, start_value=start_value,
+                         formatter=formatter, rate=rate)
+        ThreadMeter.__init__(self)
+
+
+
+def _test_percent() -> None:
     '''test Percent'''
 
-    meter = Percent(label='processing ...', max_value=1024)
+    value = 0
+    max_value = 1024
+    meter = Percent(label='processing ...', max_value=max_value, start_value=value)
     meter.show()
 
-    value = 0
-    for _i in range(100):
+    while value < max_value:
+        value += 15
         time.sleep(0.1)
-        value += 10
         meter.update(value)
 
     meter.finish()
 
 
-def _test_percentf():
+def _test_percentf() -> None:
     '''test Percentf'''
 
     def format_float(value: float) -> str:
@@ -267,19 +343,21 @@ def _test_percentf():
 
         return '{:.1f}'.format(value)
 
-    meter = Percent(label='processing ...', max_value=1024, formatter=format_float)
+    value = 0
+    max_value = 1024
+    meter = Percent(label='processing ...', max_value=max_value, start_value=value,
+                    formatter=format_float)
     meter.show()
 
-    value = 0
-    for _i in range(100):
+    while value < max_value:
+        value += 15
         time.sleep(0.1)
-        value += 10
         meter.update(value)
 
     meter.finish()
 
 
-def _test_bar():
+def _test_bar() -> None:
     '''test Bar'''
 
     def format_number(value: float) -> str:
@@ -289,11 +367,13 @@ def _test_bar():
 
         return '{:,}'.format(int(value))
 
-    meter = Bar(label='downloading', max_value=1000000, rlabel='bytes', formatter=format_number)
+    value = 0
+    max_value = 50 * 11024
+    meter = Bar(label='downloading', max_value=max_value, start_value=value,
+                rlabel='bytes', formatter=format_number)
     meter.show()
 
-    value = 0
-    for _i in range(100):
+    while value < max_value:
         time.sleep(0.1)
         value += 11024
         meter.update(value)
@@ -301,17 +381,83 @@ def _test_bar():
     meter.finish()
 
 
-def _test_spinner():
+def _test_spinner() -> None:
     '''test Spinner'''
 
     spinner = Spinner('busy ...', rlabel='please wait')
     spinner.show()
 
-    for _i in range(100):
+    for _i in range(70):
         time.sleep(0.1)
         spinner.update()
 
     spinner.finish()
+
+
+def _test_threadspinner() -> None:
+    '''test ThreadSpinner'''
+
+    spinner = ThreadSpinner('(thread) busy ...', rlabel='please wait')
+    spinner.start()
+
+    # main thread is really busy here
+    time.sleep(7)
+
+    spinner.stop()
+    # spinner is guaranteed to have stopped now
+    # ok to continue main thread
+
+
+def _test_threadbar() -> None:
+    '''test ThreadBar'''
+
+    def format_number(value: float) -> str:
+        '''local function: formats the value'''
+
+        # format with comma for thousands separator
+
+        return '{:,}'.format(int(value))
+
+    value = 0
+    max_value = 50 * 11024
+    meter = ThreadBar(label='(thread) downloading', max_value=max_value, start_value=value,
+                      rlabel='bytes', formatter=format_number)
+    meter.start()
+
+    # main thread is really busy here
+    while value < max_value:
+        value += 11024
+        meter.value = value
+        time.sleep(0.1)
+
+    meter.stop()
+    # meter is guaranteed to have stopped now
+    # ok to continue main thread
+
+
+def _test_threadpercent() -> None:
+    '''test ThreadPercent'''
+
+    def format_float(value: float) -> str:
+        '''local function; format with a decimal point'''
+
+        return '{:.1f}'.format(value)
+
+    value = 0
+    max_value = 1024
+    meter = ThreadPercent(label='(thread) processing ...', max_value=max_value, start_value=value,
+                          formatter=format_float)
+    meter.start()
+
+    # main thread is really busy here
+    while value < max_value:
+        value += 15
+        meter.value = value
+        time.sleep(0.1)
+
+    meter.stop()
+    # meter is guaranteed to have stopped now
+    # ok to continue main thread
 
 
 
@@ -320,6 +466,10 @@ if __name__ == '__main__':
     _test_spinner()
     _test_percent()
     _test_percentf()
+
+    _test_threadbar()
+    _test_threadspinner()
+    _test_threadpercent()
 
 
 # EOB

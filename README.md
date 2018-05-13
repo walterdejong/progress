@@ -78,9 +78,66 @@ a custom `formatter` function. If that doesn't suffice, you can subclass
 the type and override the `render()` method to fully customize the
 progress meter.
 
-Finally, it is possible to implement a completely new type of meter by
-deriving from the base class `progress.Meter`.
+It is possible to implement a completely new type of meter by
+subclassing `progress.Meter`.
 
+Up till now we've been single-threaded and we had to explicitly call
+`update()`. We can also let the progress be monitored from a thread.
+
+A threaded meter can `start()` and `stop()`. After `stop()` returns,
+it is guaranteed that the thread has gone away.
+So using the threaded progress meters is easy, just be sure
+to update the `meter.value` while doing work.
+
+1. Threaded progress bar
+
+```
+    value = 0
+    max_value = 1265276
+    meter = progress.ThreadBar(max_value=max_value)
+    meter.start()
+
+    # main thread is really busy here
+    while value < max_value:
+        do_work()
+        value += n
+        meter.value = value
+
+    meter.stop()
+```
+
+2. Threaded spinner
+
+```
+    spinner = progress.ThreadSpinner()
+    spinner.start()
+
+    while doing_work:
+        do_work()
+
+    spinner.stop()
+```
+
+1. Threaded percentage counter
+
+```
+    value = 0
+    max_value = 1265276
+    meter = progress.Percent(max_value=max_value)
+    meter.start()
+
+    # main thread is really busy here
+    while value < max_value:
+        do_work()
+        value += n
+        meter.value = value
+
+    meter.stop()
+```
+
+Just as with the single-threaded versions, the looks can be customized with
+labels and number formatters, or you might subclass to customize the
+threaded progress meter.
 
 --
 This is free and unencumbered software released into the public domain.
