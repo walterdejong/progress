@@ -10,6 +10,8 @@
 
 import time
 
+from typing import Callable
+
 _FPS_RATE = 4
 
 
@@ -17,13 +19,15 @@ class Meter:
     '''base class for a progress meter'''
 
     def __init__(self, label: str='', rlabel: str='', start_value: int=0,
+                 formatter: Callable[[float], str]=None,
                  clear: bool=True, rate: float=_FPS_RATE) -> None:
         '''initialize instance'''
 
         self.label = label
         self.rlabel = rlabel
-        self.clear = clear
         self.value = start_value
+        self.clear = clear
+        self.formatter = formatter
         self.rate = rate
         self.visible = False
         self.timestamp = 0.0
@@ -127,7 +131,10 @@ class Meter:
 
         # you should override this method
 
-        return 'not yet implemented'
+        if self.formatter is not None:
+            return self.formatter(float(self.value))
+
+        return '{}'.format(self.value)
 
 
 
@@ -135,10 +142,12 @@ class Bar(Meter):
     '''represents a progress bar'''
 
     def __init__(self, max_value: int, label: str='', rlabel: str='', start_value: int=0,
-                 width: int=20, face: str='| =|', rate: float=_FPS_RATE) -> None:
+                 width: int=20, face: str='| =|', formatter: Callable[[float], str]=None,
+                 rate: float=_FPS_RATE) -> None:
         '''initialize instance'''
 
-        super().__init__(label=label, rlabel=rlabel, start_value=start_value, clear=False, rate=rate)
+        super().__init__(label=label, rlabel=rlabel, start_value=start_value,
+                         clear=False, formatter=formatter, rate=rate)
 
         self.max_value = max_value
         self.width = width
@@ -153,8 +162,13 @@ class Bar(Meter):
             value = self.max_value
         units = int(value * one_unit + 0.5)
 
+        if self.formatter is not None:
+            v = self.formatter(float(self.value))
+        else:
+            v = '{}'.format(self.value)
+
         return (self.face[0] + self.face[2] * units + self.face[1] * (self.width - units) +
-                self.face[-1] + ' {}'.format(self.value))
+                self.face[-1] + ' ' + v)
 
 
 
@@ -189,10 +203,12 @@ class Percent(Meter):
     '''represents a percentage meter'''
 
     def __init__(self, max_value: int, label: str='', rlabel: str='',
-                 start_value: int=0, rate: float=_FPS_RATE) -> None:
+                 start_value: int=0, formatter: Callable[[float], str]=None,
+                 rate: float=_FPS_RATE) -> None:
         '''initialize instance'''
 
-        super().__init__(label=label, rlabel=rlabel, start_value=start_value, clear=False, rate=rate)
+        super().__init__(label=label, rlabel=rlabel, start_value=start_value,
+                         clear=False, formatter=formatter, rate=rate)
 
         self.max_value = max_value
         self.value = start_value
@@ -204,9 +220,17 @@ class Percent(Meter):
         value = self.value
         if value > self.max_value:
             value = self.max_value
+        percent = value * one_percent
 
-        percent = int(value * one_percent)
-        return '{}%'.format(percent)
+        if percent >= 100:
+            return '100%'
+        else:
+            if self.formatter is None:
+                v = '{}'.format(int(percent))
+            else:
+                v = self.formatter(percent)
+
+            return v + '%'
 
     def finish(self) -> None:
         '''end the progress meter'''
@@ -225,9 +249,29 @@ def _test_percent():
 
     meter = Percent(label='processing ...', max_value=1024)
     meter.show()
- 
+
     value = 0
-    for i in range(100):
+    for _i in range(100):
+        time.sleep(0.1)
+        value += 10
+        meter.update(value)
+
+    meter.finish()
+
+
+def _test_percentf():
+    '''test Percentf'''
+
+    def format_float(value: float) -> str:
+        '''local function; format with a decimal point'''
+
+        return '{:.1f}'.format(value)
+
+    meter = Percent(label='processing ...', max_value=1024, formatter=format_float)
+    meter.show()
+
+    value = 0
+    for _i in range(100):
         time.sleep(0.1)
         value += 10
         meter.update(value)
@@ -238,11 +282,18 @@ def _test_percent():
 def _test_bar():
     '''test Bar'''
 
-    meter = Bar(label='downloading', max_value=1000000, rlabel='bytes')
+    def format_number(value: float) -> str:
+        '''local function: formats the value'''
+
+        # format with comma for thousands separator
+
+        return '{:,}'.format(int(value))
+
+    meter = Bar(label='downloading', max_value=1000000, rlabel='bytes', formatter=format_number)
     meter.show()
- 
+
     value = 0
-    for i in range(100):
+    for _i in range(100):
         time.sleep(0.1)
         value += 11024
         meter.update(value)
@@ -255,8 +306,8 @@ def _test_spinner():
 
     spinner = Spinner('busy ...', rlabel='please wait')
     spinner.show()
-    
-    for i in range(100):
+
+    for _i in range(100):
         time.sleep(0.1)
         spinner.update()
 
@@ -268,6 +319,7 @@ if __name__ == '__main__':
     _test_bar()
     _test_spinner()
     _test_percent()
+    _test_percentf()
 
 
 # EOB
