@@ -1,9 +1,10 @@
 progress
 ========
 
-A Python module for progress bars / counters.
-
 I keep running into ugly and badly programmed progress meters, so ...
+this is a module for progress bars / counters. It's Python3, but you
+can easily adopt the main idea of this code for other programming
+languages.
 
 The trick with ASCII progress meters is that you should not update
 the screen more than four times per second, or there will be flicker and
@@ -80,12 +81,11 @@ progress meter. It's also possible to implement a completely new type of
 meter by subclassing `progress.Meter`.
 
 Up till now we've been single-threaded and we had to explicitly call
-`update()`. We can also let the progress be monitored from a thread.
-
+`update()`. We can also let the progress be monitored from a thread.  
 A threaded meter can `start()` and `stop()`. After `stop()` returns,
-it is guaranteed that the thread has gone away.
-So using the threaded progress meters is easy, just be sure
-to update the `meter.value` while doing work.
+it is guaranteed that the thread has gone away. So using a threaded
+progress meter is easy, just be sure to update the `meter.value`
+while doing work.
 
 1. Threaded progress bar
 
