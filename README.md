@@ -91,7 +91,7 @@ to update the `meter.value` while doing work.
 
 1. Threaded progress bar
 
-```
+```python
     value = 0
     max_value = 1265276
     meter = progress.ThreadBar(max_value=max_value)
@@ -108,7 +108,7 @@ to update the `meter.value` while doing work.
 
 2. Threaded spinner
 
-```
+```python
     spinner = progress.ThreadSpinner()
     spinner.start()
 
@@ -120,7 +120,7 @@ to update the `meter.value` while doing work.
 
 1. Threaded percentage counter
 
-```
+```python
     value = 0
     max_value = 1265276
     meter = progress.Percent(max_value=max_value)
@@ -139,6 +139,6 @@ Just as with the single-threaded versions, the looks can be customized with
 labels and number formatters, or you might subclass to customize the
 threaded progress meter.
 
---
+------
 This is free and unencumbered software released into the public domain.
 
