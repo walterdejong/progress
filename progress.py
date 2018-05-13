@@ -16,19 +16,20 @@ _FPS_RATE = 4
 class Meter:
     '''base class for a progress meter'''
 
-    def __init__(self, label='', rlabel='', clear=True, rate=_FPS_RATE):
+    def __init__(self, label: str='', rlabel: str='', start_value: int=0,
+                 clear: bool=True, rate: float=_FPS_RATE) -> None:
         '''initialize instance'''
 
         self.label = label
         self.rlabel = rlabel
         self.clear = clear
-        self.value = 0
+        self.value = start_value
         self.rate = rate
         self.visible = False
-        self.timestamp = 0
+        self.timestamp = 0.0
         self.line = ''
 
-    def show(self):
+    def show(self) -> None:
         '''show the progress meter'''
 
         if self.visible:
@@ -41,7 +42,7 @@ class Meter:
         self.visible = True
         self.timestamp = time.monotonic()
 
-    def hide(self):
+    def hide(self) -> None:
         '''hide the progress meter'''
 
         self.visible = False
@@ -55,7 +56,7 @@ class Meter:
 
         print('\r', end='', flush=True)
 
-    def _render(self):
+    def _render(self) -> None:
         '''make output and display it'''
 
         self.back()
@@ -70,23 +71,25 @@ class Meter:
         self.line = line
         self.display()
 
-    def display(self):
+    def display(self) -> None:
         '''display the meter'''
 
         print(self.line, end='', flush=True)
 
-    def back(self):
+    def back(self) -> None:
         '''move cursor back'''
 
         print('\b' * len(self.line), end='', flush=False)
 
-    def erase(self):
+    def erase(self) -> None:
         '''erase the meter'''
 
         print(' ' * len(self.line), end='', flush=True)
 
-    def update(self):
+    def update(self, value: int) -> None:
         '''update and show progress meter'''
+
+        self.value = value
 
         if not self.visible:
             self.show()
@@ -98,10 +101,9 @@ class Meter:
             return
 
         self.timestamp = curr_time
-
         self._render()
 
-    def finish(self):
+    def finish(self) -> None:
         '''end the progress meter'''
 
         if self.clear:
@@ -114,13 +116,13 @@ class Meter:
         self.reset()
         self.visible = False
 
-    def reset(self):
+    def reset(self) -> None:
         '''reset the progress meter to start'''
 
         self.value = 0
         self.line = ''
 
-    def render(self):
+    def render(self) -> str:
         '''Returns the rendered line'''
 
         # you should override this method
@@ -132,19 +134,18 @@ class Meter:
 class Bar(Meter):
     '''represents a progress bar'''
 
-    def __init__(self, max_value, label='', rlabel='', start_value=0,
-                 width=20, face='| =|', rate=_FPS_RATE):
+    def __init__(self, max_value: int, label: str='', rlabel: str='', start_value: int=0,
+                 width: int=20, face: str='| =|', rate: float=_FPS_RATE) -> None:
         '''initialize instance'''
 
-        super().__init__(label=label, rlabel=rlabel, clear=False, rate=rate)
+        super().__init__(label=label, rlabel=rlabel, start_value=start_value, clear=False, rate=rate)
 
         self.max_value = max_value
-        self.value = start_value
         self.width = width
         self.face = face
 
-    def render(self):
-        '''Returns the meter to display'''
+    def render(self) -> str:
+        '''Returns the bar to display'''
 
         one_unit = self.width / self.max_value
         value = self.value
@@ -155,27 +156,20 @@ class Bar(Meter):
         return (self.face[0] + self.face[2] * units + self.face[1] * (self.width - units) +
                 self.face[-1] + ' {}'.format(self.value))
 
-    def update(self, value):
-        '''update and show progress meter'''
-
-        self.value = value
-        super().update()
-
 
 
 class Spinner(Meter):
     '''represents a spinner'''
 
-    def __init__(self, label='', rlabel='', rate=_FPS_RATE):
+    def __init__(self, label: str='', rlabel: str='', rate: float=_FPS_RATE) -> None:
         '''initialize instance'''
 
         super().__init__(label=label, rlabel=rlabel, clear=True, rate=rate)
 
-        self.value = 0
         self.face = '|/-\\'
 
-    def render(self):
-        '''make output and display it'''
+    def render(self) -> str:
+        '''Returns the spinner animation frame to display'''
 
         # update and render
         self.value += 1
@@ -184,21 +178,27 @@ class Spinner(Meter):
 
         return self.face[self.value]
 
+    def update(self) -> None:   # type: ignore
+        '''overridden update() func without arguments'''
+
+        super().update(self.value)
+
 
 
 class Percent(Meter):
     '''represents a percentage meter'''
 
-    def __init__(self, max_value, label='', rlabel='', start_value=0, rate=_FPS_RATE):
+    def __init__(self, max_value: int, label: str='', rlabel: str='',
+                 start_value: int=0, rate: float=_FPS_RATE) -> None:
         '''initialize instance'''
 
-        super().__init__(label=label, rlabel=rlabel, clear=False, rate=rate)
+        super().__init__(label=label, rlabel=rlabel, start_value=start_value, clear=False, rate=rate)
 
         self.max_value = max_value
         self.value = start_value
 
-    def render(self):
-        '''Returns meter to display'''
+    def render(self) -> str:
+        '''Returns percent counter to display'''
 
         one_percent = 100 / self.max_value
         value = self.value
@@ -208,14 +208,7 @@ class Percent(Meter):
         percent = int(value * one_percent)
         return '{}%'.format(percent)
 
-    def update(self, value):
-        '''update and show progress meter'''
-
-        self.value = value
-
-        super().update()
-
-    def finish(self):
+    def finish(self) -> None:
         '''end the progress meter'''
 
         # always display as 100%
