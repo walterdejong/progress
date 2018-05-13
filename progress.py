@@ -10,7 +10,7 @@
 
 import time
 
-_FPS_RATE = 0.25
+_FPS_RATE = 4
 
 
 class Meter:
@@ -94,7 +94,7 @@ class Meter:
 
         curr_time = time.monotonic()
         diff_time = curr_time - self.timestamp
-        if diff_time < self.rate:
+        if diff_time < 1.0 / self.rate:
             return
 
         self.timestamp = curr_time
