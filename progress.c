@@ -1,5 +1,9 @@
 /*
 	progress.c	WJ118
+
+	* written by Walter de Jong <walter@heiho.net>
+	* This is free and unencumbered software released into the public domain.
+	  Please refer to http://unlicense.org/
 */
 
 #include "progress.h"
