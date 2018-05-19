@@ -1,29 +1,14 @@
 /*
- *	progress.c	WJ118
- *
- *
- *
- */
+	progress.c	WJ118
+*/
+
+#include "progress.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
-#include <time.h>
 #include <unistd.h>
-
-typedef enum {
-	PROGRESS_BAR = 0,
-	PROGRESS_PERCENT,
-	PROGRESS_SPINNER
-} ProgressMeterType;
-
-typedef struct {
-	ProgressMeterType type;
-	char *label;
-	int value, max_value;
-	clock_t timestamp;
-} ProgressMeter;
 
 static unsigned long FPS_RATE = 4UL;
 static unsigned long CLOCKS_PER_MSEC = (unsigned long)CLOCKS_PER_SEC / 1000UL;

@@ -1,0 +1,31 @@
+/*
+	progress.h	WJ118
+*/
+
+#ifndef PROGRESS_H_WJ118
+#define PROGRESS_H_WJ118	1
+
+#include <time.h>
+
+typedef enum {
+	PROGRESS_BAR = 0,
+	PROGRESS_PERCENT,
+	PROGRESS_SPINNER
+} ProgressMeterType;
+
+typedef struct {
+	ProgressMeterType type;
+	char *label;
+	int value, max_value;
+	clock_t timestamp;
+} ProgressMeter;
+
+void progress_init(ProgressMeter *, ProgressMeterType);
+void progress_show(ProgressMeter *);
+void progress_update(ProgressMeter *, int);
+void progress_finish(ProgressMeter *);
+
+#endif	/* PROGRESS_H_WJ118 */
+
+/* EOB */
+
