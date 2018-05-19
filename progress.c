@@ -10,8 +10,10 @@
 #include <string.h>
 #include <unistd.h>
 
-static unsigned long FPS_RATE = 4UL;
-static unsigned long CLOCKS_PER_MSEC = (unsigned long)CLOCKS_PER_SEC / 1000UL;
+static const unsigned long FPS_RATE = 4UL;
+static const unsigned long CLOCKS_PER_MSEC = (unsigned long)CLOCKS_PER_SEC / 1000UL;
+
+static const int BAR_WIDTH = 20;
 
 
 void progress_init(ProgressMeter *m, ProgressMeterType t) {
@@ -21,8 +23,26 @@ void progress_init(ProgressMeter *m, ProgressMeterType t) {
 }
 
 static void progress_show_bar(ProgressMeter *m) {
-	/* TODO implement this */
-	;
+	float one_unit = (float)BAR_WIDTH / (float)m->max_value;
+	int value = m->value;
+	if (m->value > m->max_value) {
+		value = m->max_value;
+	}
+	int units = (int)((float)value * one_unit + 0.5f);
+
+	char bar[BAR_WIDTH + 3];
+	bar[0] = '|';
+	bar[BAR_WIDTH + 1] = '|';
+	bar[BAR_WIDTH + 2] = 0;
+	for(int i = 1; i < BAR_WIDTH + 1; i++) {
+		if (i <= units) {
+			bar[i] = '=';
+		} else {
+			bar[i] = ' ';
+		}
+	}
+	printf("%s ", bar);
+	fflush(stdout);
 }
 
 static void progress_show_percent(ProgressMeter *m) {
@@ -45,8 +65,12 @@ static void progress_show_spinner(ProgressMeter *m) {
 }
 
 static void progress_update_bar(ProgressMeter *m) {
-	/* TODO implement this */
-	;
+	char bar[BAR_WIDTH + 4];
+	memset(bar, '\b', BAR_WIDTH + 3);
+	bar[BAR_WIDTH + 3] = 0;
+	printf("%s", bar);
+
+	progress_show_bar(m);
 }
 
 static void progress_update_percent(ProgressMeter *m) {
@@ -61,8 +85,11 @@ static void progress_update_spinner(ProgressMeter *m) {
 }
 
 static void progress_finish_bar(ProgressMeter *m) {
-	/* TODO implement this */
-	;
+	/* erase bar */
+	char erase[BAR_WIDTH + 4];
+	memset(erase, '\b', BAR_WIDTH + 3);
+	erase[BAR_WIDTH + 3] = 0;
+	printf("%s%*s%s\n", erase, BAR_WIDTH + 3, " ", erase);
 }
 
 static void progress_finish_percent(ProgressMeter *m) {
@@ -156,6 +183,25 @@ void progress_finish(ProgressMeter *m) {
 
 #ifdef TEST_PROGRESS
 
+void test_progress_bar(void) {
+	int value = 0, max_value = 1024;
+	ProgressMeter m;
+
+	progress_init(&m, PROGRESS_BAR);
+	m.label = "downloading";
+	m.value = value;
+	m.max_value = max_value;
+
+	progress_show(&m);
+
+	while(value < max_value) {
+		value += 5;
+		usleep(10000UL);
+		progress_update(&m, value);
+	}
+	progress_finish(&m);
+}
+
 void test_progress_percent(void) {
 	int value = 0, max_value = 1024;
 	ProgressMeter m;
@@ -177,6 +223,7 @@ void test_progress_percent(void) {
 
 
 int main(void) {
+	test_progress_bar();
 	test_progress_percent();
 	return 0;
 }
