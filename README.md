@@ -14,6 +14,15 @@ Now, rather than truly minimizing the character updates, we can be
 a little lazy and simply redraw the entire progress meter every so often.
 
 
+Languages
+---------
+
+Codes plus examples are included for:
+
+- Python3
+- good old C (similar implementation, but not a straight port)
+
+
 Usage
 -----
 
