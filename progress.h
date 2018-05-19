@@ -19,7 +19,7 @@ typedef enum {
 
 typedef struct {
 	ProgressMeterType type;
-	char *label;
+	char *label, *rlabel;
 	int value, max_value;
 	clock_t timestamp;
 } ProgressMeter;

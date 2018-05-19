@@ -48,7 +48,6 @@ static void progress_show_bar(ProgressMeter *m) {
 		}
 	}
 	printf("%s ", bar);
-	fflush(stdout);
 }
 
 static void progress_show_percent(ProgressMeter *m) {
@@ -61,8 +60,7 @@ static void progress_show_percent(ProgressMeter *m) {
 	if (percent > 100) {
 		percent = 100;
 	}
-	printf("%3d%%", percent);
-	fflush(stdout);
+	printf("%3d%% ", percent);
 }
 
 static void progress_show_spinner(ProgressMeter *m) {
@@ -72,7 +70,6 @@ static void progress_show_spinner(ProgressMeter *m) {
 	}
 
 	printf("%c ", SPIN[m->value]);
-	fflush(stdout);
 }
 
 static void progress_update_bar(ProgressMeter *m) {
@@ -85,7 +82,7 @@ static void progress_update_bar(ProgressMeter *m) {
 }
 
 static void progress_update_percent(ProgressMeter *m) {
-	printf("\b\b\b\b");
+	printf("\b\b\b\b\b");
 
 	progress_show_percent(m);
 }
@@ -101,18 +98,38 @@ static void progress_finish_bar(ProgressMeter *m) {
 	char erase[BAR_WIDTH + 4];
 	memset(erase, '\b', BAR_WIDTH + 3);
 	erase[BAR_WIDTH + 3] = 0;
-	printf("%s%*s\n", erase, BAR_WIDTH + 3, " ");
+	printf("%s%*s%s", erase, BAR_WIDTH + 3, " ", erase);
 }
 
 static void progress_finish_percent(ProgressMeter *m) {
 	/* show 100% */
 	m->value = m->max_value;
 	progress_update_percent(m);
-	printf("\n");
 }
 
 static void progress_finish_spinner(ProgressMeter *m) {
-	printf("\b\b  \n");
+	printf("\b\b  \b\b");
+}
+
+static void back_rlabel(ProgressMeter *m) {
+	if (m->rlabel == NULL) {
+		return;
+	}
+
+	size_t len = strlen(m->rlabel) + 1;
+	for(size_t i = 0; i < len; i++) {
+		fputc('\b', stdout);
+	}
+}
+
+static void erase_rlabel(ProgressMeter *m) {
+	if (m->rlabel == NULL) {
+		return;
+	}
+
+	back_rlabel(m);
+	printf("%*s", (int)(strlen(m->rlabel) + 1), " ");
+	back_rlabel(m);
 }
 
 void progress_show(ProgressMeter *m) {
@@ -138,6 +155,11 @@ void progress_show(ProgressMeter *m) {
 	}
 
 	m->timestamp = clock();
+
+	if (m->rlabel != NULL) {
+		printf("%s ", m->rlabel);
+	}
+	fflush(stdout);
 }
 
 void progress_update(ProgressMeter *m, int value) {
@@ -157,6 +179,8 @@ void progress_update(ProgressMeter *m, int value) {
 	}
 	m->timestamp = curr_timestamp;
 
+	back_rlabel(m);
+
 	switch(m->type) {
 		case PROGRESS_BAR:
 			progress_update_bar(m);
@@ -173,9 +197,16 @@ void progress_update(ProgressMeter *m, int value) {
 		default:
 			assert(0);
 	}
+
+	if (m->rlabel != NULL) {
+		printf("%s ", m->rlabel);
+	}
+	fflush(stdout);
 }
 
 void progress_finish(ProgressMeter *m) {
+	erase_rlabel(m);
+
 	switch(m->type) {
 		case PROGRESS_BAR:
 			progress_finish_bar(m);
@@ -192,6 +223,12 @@ void progress_finish(ProgressMeter *m) {
 		default:
 			assert(0);
 	}
+
+	if (m->rlabel != NULL) {
+		printf("%s\n", m->rlabel);
+	} else {
+		printf("\n");
+	}
 }
 
 #ifdef TEST_PROGRESS
@@ -202,6 +239,7 @@ void test_progress_bar(void) {
 
 	progress_init(&m, PROGRESS_BAR);
 	m.label = "downloading";
+	m.rlabel = "progress.package";
 	m.value = value;
 	m.max_value = max_value;
 
@@ -221,6 +259,7 @@ void test_progress_percent(void) {
 
 	progress_init(&m, PROGRESS_PERCENT);
 	m.label = "processing";
+	m.rlabel = "progress.package";
 	m.value = value;
 	m.max_value = max_value;
 
@@ -240,6 +279,7 @@ void test_progress_spinner(void) {
 
 	progress_init(&m, PROGRESS_SPINNER);
 	m.label = "busy";
+	m.rlabel = "with something";
 
 	progress_show(&m);
 
