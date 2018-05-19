@@ -15,6 +15,8 @@ static const unsigned long CLOCKS_PER_MSEC = (unsigned long)CLOCKS_PER_SEC / 100
 
 static const int BAR_WIDTH = 20;
 
+static const char *SPIN = "|/-\\";
+
 
 void progress_init(ProgressMeter *m, ProgressMeterType t) {
 	assert(t >= PROGRESS_BAR && t <= PROGRESS_SPINNER);
@@ -60,8 +62,13 @@ static void progress_show_percent(ProgressMeter *m) {
 }
 
 static void progress_show_spinner(ProgressMeter *m) {
-	/* TODO implement this */
-	;
+	m->value++;
+	if (m->value >= 4) {
+		m->value = 0;
+	}
+
+	printf("%c ", SPIN[m->value]);
+	fflush(stdout);
 }
 
 static void progress_update_bar(ProgressMeter *m) {
@@ -80,8 +87,9 @@ static void progress_update_percent(ProgressMeter *m) {
 }
 
 static void progress_update_spinner(ProgressMeter *m) {
-	/* TODO implement this */
-	;
+	printf("\b\b");
+
+	progress_show_spinner(m);
 }
 
 static void progress_finish_bar(ProgressMeter *m) {
@@ -89,7 +97,7 @@ static void progress_finish_bar(ProgressMeter *m) {
 	char erase[BAR_WIDTH + 4];
 	memset(erase, '\b', BAR_WIDTH + 3);
 	erase[BAR_WIDTH + 3] = 0;
-	printf("%s%*s%s\n", erase, BAR_WIDTH + 3, " ", erase);
+	printf("%s%*s\n", erase, BAR_WIDTH + 3, " ");
 }
 
 static void progress_finish_percent(ProgressMeter *m) {
@@ -100,8 +108,7 @@ static void progress_finish_percent(ProgressMeter *m) {
 }
 
 static void progress_finish_spinner(ProgressMeter *m) {
-	/* TODO implement this */
-	;
+	printf("\b\b  \n");
 }
 
 void progress_show(ProgressMeter *m) {
@@ -130,7 +137,9 @@ void progress_show(ProgressMeter *m) {
 }
 
 void progress_update(ProgressMeter *m, int value) {
-	m->value = value;
+	if (m->type != PROGRESS_SPINNER) {
+		m->value = value;
+	}
 
 	clock_t curr_timestamp = clock();
 	if (curr_timestamp <= m->timestamp) {
@@ -221,9 +230,26 @@ void test_progress_percent(void) {
 	progress_finish(&m);
 }
 
+void test_progress_spinner(void) {
+	int value = 0, max_value = 1024;
+	ProgressMeter m;
+
+	progress_init(&m, PROGRESS_SPINNER);
+	m.label = "busy";
+
+	progress_show(&m);
+
+	while(value < max_value) {
+		value += 5;
+		usleep(10000UL);
+		progress_update(&m, 0);
+	}
+	progress_finish(&m);
+}
 
 int main(void) {
 	test_progress_bar();
+	test_progress_spinner();
 	test_progress_percent();
 	return 0;
 }
