@@ -13,7 +13,7 @@ import (
 const (
 	refresh     = 250 * time.Millisecond
 	spinnerText = "|/-\\"
-	barWidth = 10
+	barWidth    = 10
 )
 
 type Meter struct {
@@ -89,9 +89,9 @@ func (b *Bar) Show() {
 		value = b.MaxValue
 	}
 
-	units := int(float32(value) * one_unit + 0.5)
+	units := int(float32(value)*one_unit + 0.5)
 
-	bar := "|" + strings.Repeat("=", units) + strings.Repeat(" ", b.Width - units) + "|"
+	bar := "|" + strings.Repeat("=", units) + strings.Repeat(" ", b.Width-units) + "|"
 	fmt.Printf("%s ", bar)
 }
 
@@ -101,7 +101,7 @@ func (b *Bar) Update(value int) {
 		return
 	}
 
-	bar := strings.Repeat("\b", b.Width + 3)
+	bar := strings.Repeat("\b", b.Width+3)
 	fmt.Printf("%s", bar)
 	b.Show()
 }
