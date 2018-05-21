@@ -10,7 +10,8 @@ import (
 )
 
 const (
-	refresh = 250 * time.Millisecond
+	refresh     = 250 * time.Millisecond
+	spinnerText = "|/-\\"
 )
 
 type Meter struct {
@@ -21,6 +22,10 @@ type Meter struct {
 }
 
 type Percent struct {
+	Meter
+}
+
+type Spinner struct {
 	Meter
 }
 
@@ -38,6 +43,7 @@ func (m *Meter) shouldRefresh() bool {
 }
 
 func (m *Meter) Show() {
+	m.Timestamp = time.Now()
 	if m.visible {
 		return
 	}
@@ -62,9 +68,33 @@ func (m *Meter) Finish() {
 	m.visible = false
 }
 
+func (s *Spinner) Show() {
+	s.Meter.Show()
+
+	s.Value++
+	if s.Value >= 4 {
+		s.Value = 0
+	}
+
+	fmt.Printf("%c ", spinnerText[s.Value])
+}
+
+func (s *Spinner) Update(value int) {
+	// s.Value = value
+	if !s.shouldRefresh() {
+		return
+	}
+	fmt.Printf("\b\b")
+	s.Show()
+}
+
+func (s *Spinner) Finish() {
+	fmt.Printf("\b\b  \b\b")
+	s.Meter.Finish()
+}
+
 func (p *Percent) Show() {
 	p.Meter.Show()
-	p.Timestamp = time.Now()
 	one_percent := 100.0 / float32(p.MaxValue)
 	value := p.Value
 	if value > p.MaxValue {
