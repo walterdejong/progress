@@ -20,7 +20,10 @@ Languages
 Codes plus examples are included for:
 
 - Python3
-- good old C (similar implementation, but not a straight port)
+- good old C
+- Go (golang)
+
+Note that the codes are similar, but they are not straight ports.
 
 
 Usage

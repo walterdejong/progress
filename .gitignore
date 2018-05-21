@@ -1,4 +1,5 @@
 .swp
 .*.swp
 *.o
-progress
+pkg/*
+src/test_progress
