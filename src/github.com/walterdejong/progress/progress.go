@@ -6,12 +6,14 @@ package progress
 
 import (
 	"fmt"
+	"strings"
 	"time"
 )
 
 const (
 	refresh     = 250 * time.Millisecond
 	spinnerText = "|/-\\"
+	barWidth = 10
 )
 
 type Meter struct {
@@ -21,11 +23,17 @@ type Meter struct {
 	visible         bool
 }
 
-type Percent struct {
+type Bar struct {
 	Meter
+
+	Width int
 }
 
 type Spinner struct {
+	Meter
+}
+
+type Percent struct {
 	Meter
 }
 
@@ -66,6 +74,44 @@ func (m *Meter) Update(value int) {
 func (m *Meter) Finish() {
 	fmt.Println("")
 	m.visible = false
+}
+
+func (b *Bar) Show() {
+	b.Meter.Show()
+
+	if b.Width <= 0 {
+		b.Width = barWidth
+	}
+
+	one_unit := float32(b.Width) / float32(b.MaxValue)
+	value := b.Value
+	if value > b.MaxValue {
+		value = b.MaxValue
+	}
+
+	units := int(float32(value) * one_unit + 0.5)
+
+	bar := "|" + strings.Repeat("=", units) + strings.Repeat(" ", b.Width - units) + "|"
+	fmt.Printf("%s ", bar)
+}
+
+func (b *Bar) Update(value int) {
+	b.Value = value
+	if !b.shouldRefresh() {
+		return
+	}
+
+	bar := strings.Repeat("\b", b.Width + 3)
+	fmt.Printf("%s", bar)
+	b.Show()
+}
+
+func (b *Bar) Finish() {
+	// show 100%
+	b.Value = b.MaxValue
+	b.Update(b.Value)
+
+	b.Meter.Finish()
 }
 
 func (s *Spinner) Show() {

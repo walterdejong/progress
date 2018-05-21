@@ -9,6 +9,22 @@ import (
 	"time"
 )
 
+func test_progress_bar() {
+	max_value := 1024
+	p := progress.Bar{Width: 20}
+	p.Label = "downloading"
+	p.MaxValue = max_value
+	p.Show()
+
+	value := 0
+	for value < max_value {
+		value += 15
+		time.Sleep(100 * time.Millisecond)
+		p.Update(value)
+	}
+	p.Finish()
+}
+
 func test_progress_spinner() {
 	p := progress.Spinner{}
 	p.Label = "busy"
@@ -41,6 +57,7 @@ func test_progress_percent() {
 }
 
 func main() {
+	test_progress_bar()
 	test_progress_spinner()
 	test_progress_percent()
 }
