@@ -1,0 +1,3 @@
+* do not re-display when there was no change
+  This code happily updates 4x per second even when there was no progress
+
