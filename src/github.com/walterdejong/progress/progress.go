@@ -17,7 +17,7 @@ type Meter struct {
 	Value, MaxValue int
 	Label           string
 	Timestamp       time.Time
-	visible			bool
+	visible         bool
 }
 
 type Percent struct {
@@ -41,20 +41,20 @@ func (m *Meter) Show() {
 	if m.visible {
 		return
 	}
-	if (m.Label != "") {
+	if m.Label != "" {
 		fmt.Printf("%s ", m.Label)
 	}
 	m.visible = true
 }
 
 func (m *Meter) Update(value int) {
-/*
-	m.Value = value
-	if ! m.shouldRefresh() {
-		return
-	}
-	m.Show()
-*/
+	/*
+		m.Value = value
+		if ! m.shouldRefresh() {
+			return
+		}
+		m.Show()
+	*/
 }
 
 func (m *Meter) Finish() {
@@ -79,7 +79,7 @@ func (p *Percent) Show() {
 
 func (p *Percent) Update(value int) {
 	p.Value = value
-	if ! p.shouldRefresh() {
+	if !p.shouldRefresh() {
 		return
 	}
 	fmt.Printf("\b\b\b\b\b")

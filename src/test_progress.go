@@ -9,7 +9,6 @@ import (
 	"time"
 )
 
-
 func test_progress_percent() {
 	max_value := 1024
 	p := progress.Percent{}
