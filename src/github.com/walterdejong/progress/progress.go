@@ -25,6 +25,7 @@ type Meter struct {
 	Label           string
 	Timestamp       time.Time
 	visible         bool
+	line            string
 }
 
 type Bar struct {
@@ -54,6 +55,12 @@ func (m *Meter) shouldRefresh() bool {
 	return elapsed >= refresh
 }
 
+func (m *Meter) render() {
+	/*
+		m.line = ...
+	*/
+}
+
 func (m *Meter) Show() {
 	m.Timestamp = time.Now()
 	if m.visible {
@@ -71,18 +78,21 @@ func (m *Meter) Update(value int) {
 		if ! m.shouldRefresh() {
 			return
 		}
-		m.Show()
+		line_copy := m.line
+		m.render()
+		if line_copy != m.line {
+			print m.line
+		}
 	*/
 }
 
 func (m *Meter) Finish() {
 	fmt.Println("")
 	m.visible = false
+	m.line = ""
 }
 
-func (b *Bar) Show() {
-	b.Meter.Show()
-
+func (b *Bar) render() {
 	if b.Width <= 0 {
 		b.Width = barWidth
 	}
@@ -95,8 +105,14 @@ func (b *Bar) Show() {
 
 	units := int(float32(value)*one_unit + 0.5)
 
-	bar := "|" + strings.Repeat("=", units) + strings.Repeat(" ", b.Width-units) + "|"
-	fmt.Printf("%s ", bar)
+	b.line = "|" + strings.Repeat("=", units) + strings.Repeat(" ", b.Width-units) + "|"
+}
+
+func (b *Bar) Show() {
+	b.Meter.Show()
+
+	b.render()
+	fmt.Printf("%s ", b.line)
 }
 
 func (b *Bar) Update(value int) {
@@ -105,9 +121,14 @@ func (b *Bar) Update(value int) {
 		return
 	}
 
-	bar := strings.Repeat("\b", b.Width+3)
-	fmt.Printf("%s", bar)
-	b.Show()
+	line_copy := b.line
+	b.render()
+	if line_copy == b.line {
+		return
+	}
+
+	erase := strings.Repeat("\b", b.Width+3)
+	fmt.Printf("%s%s ", erase, b.line)
 }
 
 func (b *Bar) Finish() {
@@ -118,15 +139,19 @@ func (b *Bar) Finish() {
 	b.Meter.Finish()
 }
 
-func (s *Spinner) Show() {
-	s.Meter.Show()
-
+func (s *Spinner) render() {
 	s.Value++
 	if s.Value >= 4 {
 		s.Value = 0
 	}
 
-	fmt.Printf("%c ", spinnerText[s.Value])
+	s.line = fmt.Sprintf("%c", spinnerText[s.Value])
+}
+
+func (s *Spinner) Show() {
+	s.Meter.Show()
+	s.render()
+	fmt.Printf("%s ", s.line)
 }
 
 func (s *Spinner) Update(value int) {
@@ -135,7 +160,8 @@ func (s *Spinner) Update(value int) {
 		return
 	}
 	fmt.Printf("\b\b")
-	s.Show()
+	s.render()
+	fmt.Printf("%s ", s.line)
 }
 
 func (s *Spinner) Finish() {
@@ -143,8 +169,7 @@ func (s *Spinner) Finish() {
 	s.Meter.Finish()
 }
 
-func (p *Percent) Show() {
-	p.Meter.Show()
+func (p *Percent) render() {
 	one_percent := 100.0 / float32(p.MaxValue)
 	value := p.Value
 	if value > p.MaxValue {
@@ -154,7 +179,13 @@ func (p *Percent) Show() {
 	if percent > 100 {
 		percent = 100
 	}
-	fmt.Printf("%3d%% ", percent)
+	p.line = fmt.Sprintf("%3d%%", percent)
+}
+
+func (p *Percent) Show() {
+	p.Meter.Show()
+	p.render()
+	fmt.Printf("%s ", p.line)
 }
 
 func (p *Percent) Update(value int) {
@@ -162,8 +193,14 @@ func (p *Percent) Update(value int) {
 	if !p.shouldRefresh() {
 		return
 	}
-	fmt.Printf("\b\b\b\b\b")
-	p.Show()
+
+	line_copy := p.line
+	p.render()
+	if line_copy == p.line {
+		return
+	}
+
+	fmt.Printf("\b\b\b\b\b%s ", p.line)
 }
 
 func (p *Percent) Finish() {
