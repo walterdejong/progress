@@ -149,16 +149,12 @@ static void progress_update_percent(ProgressMeter *m) {
 }
 
 static void progress_update_spinner(ProgressMeter *m) {
-	char copy[PROGRESS_LINEBUF];
-	strncpy(copy, m->line, PROGRESS_LINEBUF);
-	copy[PROGRESS_LINEBUF - 1] = 0;
+	/*
+		Note that the spinner changes every time tick,
+		so no need to explicitly check for change
+	*/
 
 	progress_make_spinner(m);
-
-	if (!strcmp(copy, m->line)) {
-		/* there was no visual change */
-		return;
-	}
 
 	back_rlabel(m);
 
