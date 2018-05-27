@@ -11,6 +11,8 @@
 
 #include <time.h>
 
+#define PROGRESS_LINEBUF	64
+
 typedef enum {
 	PROGRESS_BAR = 0,
 	PROGRESS_PERCENT,
@@ -22,6 +24,7 @@ typedef struct {
 	char *label, *rlabel;
 	int value, max_value;
 	clock_t timestamp;
+	char line[PROGRESS_LINEBUF];
 } ProgressMeter;
 
 void progress_init(ProgressMeter *, ProgressMeterType);

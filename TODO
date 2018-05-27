@@ -1,3 +1,21 @@
 * do not re-display when there was no change
   This code happily updates 4x per second even when there was no progress
 
+
+	make()
+	- sprintf buf
+
+	show()
+	 - make()
+	 - print buf
+
+	update()
+	- copy buf
+	- make()
+	- if strcmp(buf, copy_buf) { print buf }
+
+	finish()
+	- update(100%)
+	- delete buf
+
+EOB
