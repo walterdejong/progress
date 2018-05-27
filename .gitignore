@@ -3,3 +3,4 @@
 *.o
 pkg/*
 src/test_progress
+progress
