@@ -64,8 +64,6 @@ class Meter:
     def _render(self) -> None:
         '''make output and display it'''
 
-        self.back()
-
         line = self.render() + ' '
         if self.rlabel:
             line += self.rlabel + ' '
@@ -73,6 +71,7 @@ class Meter:
         if line == self.line:
             return
 
+        self.back()
         self.line = line
         self.display()
 
