@@ -8,6 +8,7 @@
 
 '''progress meters'''
 
+import os
 import time
 import threading
 
@@ -33,6 +34,10 @@ class Meter:
         self.visible = False
         self.timestamp = 0.0
         self.line = ''
+        try:
+            self.vt100 = (os.environ['TERM'] != 'dumb')
+        except KeyError:
+            self.vt100 = False
 
     def show(self) -> None:
         '''show the progress meter'''
@@ -52,14 +57,15 @@ class Meter:
 
         self.visible = False
 
-        self.back()
-
-        if self.label:
-            print('\r' + ' ' * (len(self.label) + 1), end='', flush=False)
-
-        self.erase()
-
-        print('\r', end='', flush=True)
+        if self.vt100:
+            print('\r\x1b[K', end='', flush=True)
+        else:
+            if self.label:
+                print('\r' + ' ' * (len(self.label) + 1), end='', flush=False)
+            else:
+                self.back()
+            self.erase()
+            print('\r', end='', flush=True)
 
     def _render(self) -> None:
         '''make output and display it'''
@@ -83,12 +89,19 @@ class Meter:
     def back(self) -> None:
         '''move cursor back'''
 
-        print('\b' * len(self.line), end='', flush=False)
+        if self.line:
+            if self.vt100:
+                print('\x1b[{}D'.format(len(self.line)), end='', flush=False)
+            else:
+                print('\b' * len(self.line), end='', flush=False)
 
     def erase(self) -> None:
         '''erase the meter'''
 
-        print(' ' * len(self.line), end='', flush=True)
+        if self.vt100:
+            print('\x1b[K', end='', flush=True)
+        else:
+            print(' ' * len(self.line), end='', flush=True)
 
     def update(self, value: int) -> None:
         '''update and show progress meter'''
