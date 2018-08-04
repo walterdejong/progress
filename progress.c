@@ -23,11 +23,26 @@ static const int BAR_WIDTH = 20;
 
 static const char *SPIN = "|/-\\";
 
+static int have_vt100 = -1;
+
 
 void progress_init(ProgressMeter *m, ProgressMeterType t) {
 	assert(t >= PROGRESS_BAR && t <= PROGRESS_SPINNER);
 	memset(m, 0, sizeof(ProgressMeter));
 	m->type = t;
+
+	/*
+		check TERM variable: can we do vt100?
+		this is done only once
+	*/
+	if (have_vt100 == -1) {
+		char *term = getenv("TERM");
+		if (term == NULL || !strcmp(term, "dumb")) {
+			have_vt100 = 0;
+		} else {
+			have_vt100 = 1;
+		}
+	}
 }
 
 static void back_rlabel(ProgressMeter *m) {
@@ -36,8 +51,17 @@ static void back_rlabel(ProgressMeter *m) {
 	}
 
 	size_t len = strlen(m->rlabel) + 1;
-	for(size_t i = 0; i < len; i++) {
-		fputc('\b', stdout);
+
+	if (have_vt100) {
+		char buf[16];
+
+		snprintf(buf, sizeof(buf), "\x1b[%zuD", len);
+		printf(buf);
+	} else {
+		/* dumb terminal */
+		for(size_t i = 0; i < len; i++) {
+			fputc('\b', stdout);
+		}
 	}
 }
 
@@ -114,11 +138,14 @@ static void progress_update_bar(ProgressMeter *m) {
 
 	back_rlabel(m);
 
-	char erase[BAR_WIDTH + 4];
-	memset(erase, '\b', BAR_WIDTH + 3);
-	erase[BAR_WIDTH + 3] = 0;
-
-	printf("%s%s ", erase, m->line);
+	if (have_vt100) {
+		printf("\x1b[%uD%s ", BAR_WIDTH + 3, m->line);
+	} else {
+		char erase[BAR_WIDTH + 4];
+		memset(erase, '\b', BAR_WIDTH + 3);
+		erase[BAR_WIDTH + 3] = 0;
+		printf("%s%s ", erase, m->line);
+	}
 
 	if (m->rlabel != NULL) {
 		printf("%s ", m->rlabel);
@@ -140,7 +167,12 @@ static void progress_update_percent(ProgressMeter *m) {
 
 	back_rlabel(m);
 
-	printf("\b\b\b\b\b%s ", m->line);
+	/* back percentage + print line */
+	if (have_vt100) {
+		printf("\x1b[5D%s ", m->line);
+	} else {
+		printf("\b\b\b\b\b%s ", m->line);
+	}
 
 	if (m->rlabel != NULL) {
 		printf("%s ", m->rlabel);
@@ -168,16 +200,28 @@ static void progress_update_spinner(ProgressMeter *m) {
 
 static void progress_finish_bar(ProgressMeter *m) {
 	/* erase bar */
-	char erase[BAR_WIDTH + 4];
-	memset(erase, '\b', BAR_WIDTH + 3);
-	erase[BAR_WIDTH + 3] = 0;
-	printf("%s%*s%s", erase, BAR_WIDTH + 3, " ", erase);
+	if (have_vt100) {
+		printf("\x1b[%uD\x1b[K", BAR_WIDTH + 3);
+	} else {
+		char erase[BAR_WIDTH + 4];
+		memset(erase, '\b', BAR_WIDTH + 3);
+		erase[BAR_WIDTH + 3] = 0;
+		printf("%s%*s%s", erase, BAR_WIDTH + 3, " ", erase);
+	}
 }
 
 static void progress_finish_percent(ProgressMeter *m) {
 	/* show 100% */
 	m->value = m->max_value;
-	progress_update_percent(m);
+
+	progress_make_percent(m);
+
+	/* back percentage + print line */
+	if (have_vt100) {
+		printf("\x1b[5D%s ", m->line);
+	} else {
+		printf("\b\b\b\b\b%s ", m->line);
+	}
 }
 
 static void progress_finish_spinner(ProgressMeter *m) {
@@ -190,8 +234,13 @@ static void erase_rlabel(ProgressMeter *m) {
 	}
 
 	back_rlabel(m);
-	printf("%*s", (int)(strlen(m->rlabel) + 1), " ");
-	back_rlabel(m);
+
+	if (have_vt100) {
+		printf("\x1b[K");
+	} else {
+		printf("%*s", (int)(strlen(m->rlabel) + 1), " ");
+		back_rlabel(m);
+	}
 }
 
 void progress_show(ProgressMeter *m) {
