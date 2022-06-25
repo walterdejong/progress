@@ -4,3 +4,8 @@
 pkg/*
 src/test_progress
 progress
+
+
+# Added by cargo
+
+/target
