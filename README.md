@@ -2,7 +2,7 @@ progress
 ========
 
 I keep running into ugly and badly programmed progress meters, so ...
-this is a module for progress bars / counters. It's Python3, but you
+this is a module for progress bars / counters. ~~It's Python3, but~~ you
 can easily adopt the main idea of this code for other programming
 languages.
 
