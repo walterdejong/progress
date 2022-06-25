@@ -22,6 +22,7 @@ Codes plus examples are included for:
 - Python3
 - good old C
 - Go (golang)
+- Rust
 
 Note that the codes are similar, but they are not straight ports.
 
@@ -93,7 +94,7 @@ progress meter. It's also possible to implement a completely new type of
 meter by subclassing `progress.Meter`.
 
 Up till now we've been single-threaded and we had to explicitly call
-`update()`. We can also let the progress be monitored from a thread.  
+`update()`. We can also let the progress be monitored from a thread.
 A threaded meter can `start()` and `stop()`. After `stop()` returns,
 it is guaranteed that the thread has gone away. So using a threaded
 progress meter is easy, just be sure to update the `meter.value`
@@ -151,4 +152,3 @@ threaded progress meter.
 
 ------
 _This is free and unencumbered software released into the public domain._
-
