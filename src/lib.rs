@@ -208,7 +208,7 @@ impl Progress for ProgressBar {
         if self.meter.have_vt100 {
             print!("\r\x1b[K");
         } else {
-            let length = self.meter.label.len() + 1 + self.bar_width + 1 + self.meter.rlabel.len() + 1;
+            let length = self.meter.label.len() + 1 + self.bar_width + 3 + self.meter.rlabel.len() + 1;
             print!("\r{: <1$}\r", "", length);
         }
         stdout().flush().unwrap();
@@ -236,7 +236,7 @@ impl Progress for ProgressBar {
     fn update_display(&self) {
         self.meter.back_rlabel();
 
-        print!("{:\x08<1$}", "", self.bar_width + 1);
+        print!("{:\x08<1$}", "", self.bar_width + 3);
         print!("{} ", self.cached);
 
         if ! self.meter.rlabel.is_empty() {
@@ -252,7 +252,7 @@ impl Progress for ProgressBar {
 }
 
 impl ProgressBar {
-    const BAR_WIDTH: usize = 22;
+    const BAR_WIDTH: usize = 20;
 
     pub fn new() -> ProgressBar {
         ProgressBar {
@@ -272,18 +272,17 @@ impl ProgressBar {
     }
 
     fn make_bar(&self) -> String {
-        assert!(self.bar_width > 2);
-        let mut buf = vec![' ' as u8; self.bar_width];
+        let mut buf = vec![' ' as u8; self.bar_width + 2];
         buf[0] = '|' as u8;
-        buf[self.bar_width - 1] = '|' as u8;
+        buf[self.bar_width + 1] = '|' as u8;
 
         let one_unit = self.bar_width as f32 / self.get_max_value() as f32;
         let value = std::cmp::min(self.get_value(), self.get_max_value());
         let units = (value as f32 * one_unit + 0.5) as usize;
 
-        for i in 1..self.bar_width - 1 {
+        for i in 0..self.bar_width {
             if i < units {
-                buf[i] = '=' as u8;
+                buf[i + 1] = '=' as u8;
             } else {
                 break;
             }

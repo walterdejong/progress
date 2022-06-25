@@ -24,7 +24,7 @@ use std::{thread, time};
 
 
 fn main() {
-    let mut bar = ProgressBar::new_bar("downloading", "linux.tar.gz", 2560, 22);
+    let mut bar = ProgressBar::new_bar("downloading", "linux.tar.gz", 2560, 20);
     bar.show();
     for _i in 0..100 {
         bar.update(bar.get_value() + 15);
