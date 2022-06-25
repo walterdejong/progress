@@ -1,4 +1,22 @@
-//
+/*
+    progress WJ112
+    main.rs : progress demonstrator program
+
+    * written by Walter de Jong <walter@heiho.net>
+    * This is free and unencumbered software released into the public domain.
+      Please refer to http://unlicense.org/
+
+
+    this is a rather crappy program but it is only intended to show
+    how to use the progress indicators: ProgressBar, ProgressPercent, ProgressSpinner
+
+    - step 1 : make a progress indicator instance
+               either with ::new() or with ::new_bar() / ::new_percent() / ::new_spinner()
+    - step 2 : .show() the indicator
+    - step 3 : repeatedly call .update() while doing work, usually in a loop
+               do this until you finish doing work
+    - step 4 : call .finish() to render the final state of the indicator
+*/
 
 use progress::{Progress, ProgressSpinner, ProgressPercent, ProgressBar};
 
