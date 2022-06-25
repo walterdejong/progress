@@ -93,6 +93,10 @@ the type and override the `render()` method to fully customize the
 progress meter. It's also possible to implement a completely new type of
 meter by subclassing `progress.Meter`.
 
+
+Multi-threaded (Python)
+-----------------------
+
 Up till now we've been single-threaded and we had to explicitly call
 `update()`. We can also let the progress be monitored from a thread.
 A threaded meter can `start()` and `stop()`. After `stop()` returns,
